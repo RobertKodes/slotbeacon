@@ -58,7 +58,7 @@ Vite serves at `/slotbeacon/`. Open that path, not `/`.
 npm run build
 ```
 
-must pass. Static `dist/` is force-pushed to the `gh-pages` branch at root (`index.html`, `assets/`, `.nojekyll`). Repo Pages source should be **branch `gh-pages` / folder `/`**. If enabling Pages via API returns **403**, one click: GitHub → Settings → Pages → source **`gh-pages` / root**.
+must pass. Static `dist/` is force-pushed to the `gh-pages` branch at root (`index.html`, `assets/`, `.nojekyll`). Repo Pages source should be **branch `gh-pages` / folder `/`**. Enabling Pages via API returned **403** (token cannot write Pages settings). One click: GitHub → Settings → Pages → source **`gh-pages` / root**.
 
 Public RPC, rotating on failure (no API keys):
 

@@ -87,9 +87,9 @@ export class BeaconCoast {
     if (!spec) return
     const h = spec.sig ? hash32(spec.sig) : (Math.imul(this.salt, 2654435761) >>> 0)
     this.salt += 1
-    const x = 0.04 + ((h & 0xffff) / 0xffff) * 0.58
-    const y = 0.02 + (((h >>> 16) & 0xff) / 255) * 0.08
-    const scale = 0.72 + (((h >>> 8) & 0xff) / 255) * 0.55
+    const x = 0.05 + ((h & 0xffff) / 0xffff) * 0.54
+    const y = 0.02 + (((h >>> 16) & 0xff) / 255) * 0.1
+    const scale = 0.95 + (((h >>> 8) & 0xff) / 255) * 0.7
     const hull = (h >>> 12) % 3
     const drift = (((h >>> 4) & 0xff) / 255 - 0.5) * 0.012
     this.vessels.push({
@@ -213,7 +213,7 @@ function paintSky(
   ctx.save()
   for (const s of stars) {
     const tw = still ? 1 : 0.72 + 0.28 * Math.sin(now * 0.0012 + s.x * 20)
-    ctx.fillStyle = hexAlpha('#D8E4EC', s.a * tw * (1 - fee * 0.35))
+    ctx.fillStyle = hexAlpha('#D8E4EC', (s.a + 0.08) * tw * (1 - fee * 0.28))
     ctx.fillRect(s.x * w, s.y * layout.horizon * 0.92, s.s, s.s)
   }
   ctx.restore()
@@ -256,7 +256,7 @@ function paintSea(
     const y = layout.horizon + 8 + t * (seaH - 16)
     const amp = (1.6 + t * 7) * (still ? 0.15 : 1)
     ctx.beginPath()
-    ctx.strokeStyle = hexAlpha(PALETTE.mist, 0.035 + (1 - t) * 0.04 + fee * 0.02)
+    ctx.strokeStyle = hexAlpha(PALETTE.mist, 0.05 + (1 - t) * 0.06 + fee * 0.03)
     ctx.lineWidth = 1
     for (let x = 0; x <= w; x += 10) {
       const yy = y + Math.sin(x * 0.018 + phase * (0.8 + t) + i) * amp
@@ -280,16 +280,16 @@ function paintBeam(
 ) {
   const { lx, ly } = layout
   const reach = Math.hypot(w, h) * 0.95
-  const half = 0.16 + fee * 0.06
-  const lamp = frozen ? 0.22 : 0.55 + fee * 0.35
+  const half = 0.2 + fee * 0.08
+  const lamp = frozen ? 0.28 : 0.72 + fee * 0.28
   if (reduced) {
     ctx.save()
     ctx.globalCompositeOperation = 'lighter'
     ctx.beginPath()
     ctx.moveTo(lx, ly)
-    ctx.arc(lx, ly, reach * 0.42, sweep - 0.08, sweep + 0.08)
+    ctx.arc(lx, ly, reach * 0.55, sweep - 0.1, sweep + 0.1)
     ctx.closePath()
-    ctx.fillStyle = hexAlpha(PALETTE.sodium, 0.12)
+    ctx.fillStyle = hexAlpha(PALETTE.sodium, 0.2)
     ctx.fill()
     ctx.restore()
     paintReflection(ctx, w, h, layout, sweep, fee * 0.4, true)
@@ -304,17 +304,17 @@ function paintBeam(
   ctx.closePath()
   const cone = ctx.createRadialGradient(lx, ly, 4, lx, ly, reach)
   cone.addColorStop(0, hexAlpha(PALETTE.sodium, lamp))
-  cone.addColorStop(0.18, hexAlpha(PALETTE.sodium, 0.22 + fee * 0.1))
-  cone.addColorStop(0.55, hexAlpha(PALETTE.brass, 0.07 + fee * 0.04))
+  cone.addColorStop(0.14, hexAlpha(PALETTE.sodium, 0.38 + fee * 0.14))
+  cone.addColorStop(0.42, hexAlpha(PALETTE.brass, 0.14 + fee * 0.06))
   cone.addColorStop(1, hexAlpha(PALETTE.sodium, 0))
   ctx.fillStyle = cone
   ctx.fill()
 
   ctx.beginPath()
   ctx.moveTo(lx, ly)
-  ctx.arc(lx, ly, reach, sweep - half * 0.28, sweep + half * 0.28)
+  ctx.arc(lx, ly, reach, sweep - half * 0.22, sweep + half * 0.22)
   ctx.closePath()
-  ctx.fillStyle = hexAlpha(PALETTE.sodium, frozen ? 0.16 : 0.28 + fee * 0.12)
+  ctx.fillStyle = hexAlpha(PALETTE.sodium, frozen ? 0.22 : 0.42 + fee * 0.14)
   ctx.fill()
   ctx.restore()
 
@@ -346,8 +346,8 @@ function paintReflection(
   ctx.globalCompositeOperation = 'lighter'
   const fall = Math.max(0.18, 1 - Math.abs(dirY - 0.35))
   const path = ctx.createLinearGradient(hx, horizon, hx, h)
-  path.addColorStop(0, hexAlpha(PALETTE.sodium, (frozen ? 0.08 : 0.18 + fee * 0.08) * fall))
-  path.addColorStop(0.4, hexAlpha(PALETTE.brass, 0.05 * fall))
+  path.addColorStop(0, hexAlpha(PALETTE.sodium, (frozen ? 0.12 : 0.28 + fee * 0.1) * fall))
+  path.addColorStop(0.4, hexAlpha(PALETTE.brass, 0.08 * fall))
   path.addColorStop(1, hexAlpha(PALETTE.sodium, 0))
   ctx.fillStyle = path
   ctx.beginPath()
@@ -385,12 +385,12 @@ function paintShips(
     const sy = layout.horizon - 5 - v.y * h * 0.05
     const bearing = shipBearing(layout, v.x, v.y, h)
     const hit = Math.max(0, 1 - angDist(sweep, bearing) / 0.34)
-    const s = 7 + v.scale * 9
+    const s = 10 + v.scale * 11
     drawHull(ctx, sx, sy, s, v.hull, v.failed, fade)
     if (v.failed) {
       drawSnuffed(ctx, sx, sy, s, fade)
     } else {
-      const bloom = 0.35 + hit * 0.65
+      const bloom = 0.42 + hit * 0.7
       drawLantern(ctx, sx, sy - s * 0.55, familyColor(v.family), bloom * fade, s)
     }
   }
@@ -537,11 +537,16 @@ function paintCliff(ctx: CanvasRenderingContext2D, w: number, h: number, layout:
   ctx.fillStyle = '#101820'
   ctx.fill()
 
-  ctx.strokeStyle = hexAlpha(PALETTE.mist, 0.12)
-  ctx.lineWidth = 1
+  ctx.strokeStyle = hexAlpha(PALETTE.mist, 0.18)
+  ctx.lineWidth = 1.2
   ctx.beginPath()
   ctx.moveTo(cliffX + 4, horizon + 26)
   ctx.quadraticCurveTo(cliffX + w * 0.12, horizon + 4, w, horizon + 20)
+  ctx.stroke()
+  ctx.strokeStyle = hexAlpha(PALETTE.brass, 0.12)
+  ctx.beginPath()
+  ctx.moveTo(cliffX + w * 0.05, horizon + 40)
+  ctx.quadraticCurveTo(cliffX + w * 0.16, horizon + 22, w - 8, horizon + 38)
   ctx.stroke()
 }
 
@@ -644,13 +649,13 @@ function paintTower(
   if (!frozen) {
     ctx.save()
     ctx.globalCompositeOperation = 'lighter'
-    const glow = ctx.createRadialGradient(lx, ly + 6, 0, lx, ly + 6, 36 + fee * 18)
-    glow.addColorStop(0, hexAlpha(PALETTE.sodium, 0.45 + fee * 0.25))
-    glow.addColorStop(0.4, hexAlpha(PALETTE.sodium, 0.12))
+    const glow = ctx.createRadialGradient(lx, ly + 6, 0, lx, ly + 6, 52 + fee * 22)
+    glow.addColorStop(0, hexAlpha(PALETTE.sodium, 0.62 + fee * 0.28))
+    glow.addColorStop(0.35, hexAlpha(PALETTE.sodium, 0.2))
     glow.addColorStop(1, hexAlpha(PALETTE.sodium, 0))
     ctx.fillStyle = glow
     ctx.beginPath()
-    ctx.arc(lx, ly + 6, 36 + fee * 18, 0, TAU)
+    ctx.arc(lx, ly + 6, 52 + fee * 22, 0, TAU)
     ctx.fill()
     ctx.restore()
   }
